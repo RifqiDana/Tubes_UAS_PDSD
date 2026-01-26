@@ -46,3 +46,13 @@ if file is not None:
     plt.title("Distribusi Jumlah Penyewaan Sepeda (cnt)")
     plt.show()
 
+file = st.file_uploader('Unggah File CSV',type='csv')
+
+if file is not None :
+    data = pd.read_csv(file)
+    st.write('Isi Dari DataFrame Adalah : ')
+    st.dataframe(data)
+
+
+
+ 
