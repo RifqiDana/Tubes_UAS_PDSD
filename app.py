@@ -4,195 +4,125 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-file = st.file_uploader('Unggah File CSV',type = 'csv')
+# Set page title
+st.set_page_config(page_title="Dashboard Penyewaan Sepeda", layout="wide")
+
+st.title("🚲 Dashboard Analisis Data Penyewaan Sepeda")
+
+file = st.file_uploader('Unggah File CSV', type='csv')
 
 if file is not None:
+    # --- LOAD & PREPARE DATA ---
     data = pd.read_csv(file)
-    st.write('Isi dari Dataframe Adalah : ')
-    st.dataframe(data)
-
-    # INFORMASI DATA
-    st.header('Informasi Data')
-
-    st.subheader('Statistik Deskriptif')
-    st.write(data.describe())
-
-    st.subheader('Missing Value')
-    st.write(data.isna().sum())
     
-    #DATA CLEANING
+    # Cleaning & Mapping
     data['dteday'] = pd.to_datetime(data['dteday'])
-    data['season'] = data['season'].map({
-        1: 'Spring', 2: 'Summer', 3: 'Fall', 4: 'Winter'
-    })
-    
+    data['season'] = data['season'].map({1: 'Spring', 2: 'Summer', 3: 'Fall', 4: 'Winter'})
     data['yr'] = data['yr'].map({0: '2011', 1: '2012'})
     data['mnth'] = data['mnth'].map({
         1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'Mei', 6: 'Jun', 
-        7: 'Jul', 8: 'Agu', 9: 'Sep', 10: 'Okt', 11: 'Sep', 12: 'Des' 
-        })
+        7: 'Jul', 8: 'Agu', 9: 'Sep', 10: 'Okt', 11: 'Nov', 12: 'Des' 
+    })
     data['weathersit'] = data['weathersit'].map({
-        1: 'Cerah/Berawan',
-        2: 'Kabut/Mendung',
-        3: 'Salju/Hujan Ringan',
-        4: 'Cuaca Ekstrem'
+        1: 'Cerah/Berawan', 2: 'Kabut/Mendung', 3: 'Salju/Hujan Ringan', 4: 'Cuaca Ekstrem'
     })
     data['weekday'] = data['weekday'].map({
-        0: 'Minggu', 1: 'Senin', 2: 'selasa', 3: 'Rabu', 4: 'Kamis',
-        5: 'Jumat', 6: 'Sabtu'
+        0: 'Minggu', 1: 'Senin', 2: 'Selasa', 3: 'Rabu', 4: 'Kamis', 5: 'Jumat', 6: 'Sabtu'
     })
 
-    # Exploratory Data Analysis (EDA)
-    st.header('Exploratory Data Analysis (EDA)')
+    # --- MEMBUAT TAB ---
+    tab1, tab2, tab3, tab4 = st.tabs(["📄 Data & Stats", "📊 Distribusi & Outliers", "🔗 Analisis Korelasi", "📈 Tren & Waktu"])
 
-    fig, ax = plt.subplots(figsize=(10, 5))
-
-    sns.histplot(data["cnt"], kde=True, ax=ax, color='skyblue')
-
-    ax.set_title("Distribusi Jumlah Penyewaan Sepeda (cnt)")
-    ax.set_xlabel("Jumlah")
-    ax.set_ylabel("Frekuensi")
-
-    st.pyplot(fig)
-    
-    #Distribusi Fitur Numerik
-    fig, ax = plt.subplots(figsize=(12,8))
-    
-    st.subheader("Distribusi Fitur Numerik")
-    num_cols = ["temp", "atemp", "hum", "windspeed"]
-    
-    data[num_cols].hist(bins=20, ax=ax)
-    
-    plt.suptitle("Distribusi Fitur Numerik")
-    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-    
-    st.pyplot(fig)
-    
-    #Boxplot
-    st.subheader('Pemeriksaan Outliers dengan Boxplot')
-    num_cols = ["temp", "atemp", "hum", "windspeed"]
-
-    fig, ax = plt.subplots(figsize=(10, 6))
-
-    sns.boxplot(data=data[num_cols], ax=ax, palette="Set3")
-
-    ax.set_title("Boxplot Fitur Numerik", fontsize=14)
-
-    st.pyplot(fig)
-
-    # heatmap korelasi
-    st.header("Analisis Hubungan Antar Variabel")
-
-    numeric_data = data.select_dtypes(include=['int64', 'float64'])
-
-    fig, ax = plt.subplots(figsize=(10, 6))
-
-    sns.heatmap(numeric_data.corr(), 
-                annot=True, 
-                cmap="coolwarm", 
-                fmt=".2f", 
-                ax=ax)
-
-    ax.set_title("Heatmap Korelasi (Kolom Numerik)")
-
-    st.pyplot(fig)
-    
-    # SCATTER PLOT: FITUR VS TARGET
-    st.header("Analisis Hubungan Fitur dengan Jumlah Penyewaan (cnt)")
-
-    num_cols = ["temp", "atemp", "hum", "windspeed"]
-
-    cols = st.columns(2)
-
-    for i, col_name in enumerate(num_cols):
-        with cols[i % 2]:
-            fig, ax = plt.subplots(figsize=(5, 4))
-            sns.scatterplot(x=data[col_name], y=data['cnt'], ax=ax, alpha=0.5, color='orange')
-            
-            ax.set_title(f"{col_name} vs cnt", fontsize=12)
-            ax.set_xlabel(col_name)
-            ax.set_ylabel("Total Penyewaan (cnt)")
-            
-            st.pyplot(fig)
-    
-    #VISUALISASI PER MUSIM
-            
-    st.header("Analisis Penyewaan Berdasarkan Musim")
-
-    fig, ax = plt.subplots(figsize=(10, 6))
-
-
-    sns.barplot(x="season", y="cnt", data=data, ax=ax, palette="viridis")
-
-    ax.set_title("Rata-rata Penyewaan Sepeda per Musim", fontsize=14)
-    ax.set_xlabel("Musim")
-    ax.set_ylabel("Rata-rata Jumlah Penyewaan")
-
-    st.pyplot(fig)
-    
-    # ANALISIS HARI KERJA & HARI LIBUR
-    st.header("Analisis Berdasarkan Status Hari")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.subheader("Hari Kerja vs Akhir Pekan")
-        fig1, ax1 = plt.subplots(figsize=(6, 5))
-        sns.barplot(x="workingday", y="cnt", data=data, ax=ax1, palette="Blues")
-        ax1.set_title("Rata-rata Penyewaan: Workingday (1) vs Weekend (0)")
-        st.pyplot(fig1)
-
-    with col2:
-        st.subheader("Hari Libur (Holiday) vs Hari Biasa")
-        fig2, ax2 = plt.subplots(figsize=(6, 5))
-        sns.barplot(x="holiday", y="cnt", data=data, ax=ax2, palette="Reds")
-        ax2.set_title("Rata-rata Penyewaan: Holiday (1) vs Normal Day (0)")
-        st.pyplot(fig2)
+    # --- TAB 1: INFORMASI DATA ---
+    with tab1:
+        st.header('Informasi Dataframe')
+        st.dataframe(data.head(100)) # Menampilkan 100 baris pertama agar tidak berat
         
-    # ANALISIS PER TAHUN
-    st.header("Pertumbuhan Penyewaan Per Tahun")
+        col_info1, col_info2 = st.columns(2)
+        with col_info1:
+            st.subheader('Statistik Deskriptif')
+            st.write(data.describe())
+        with col_info2:
+            st.subheader('Pengecekan Missing Value')
+            st.write(data.isna().sum())
 
-    fig, ax = plt.subplots(figsize=(8, 5))
+    # --- TAB 2: EXPLORATORY DATA ANALYSIS (EDA) ---
+    with tab2:
+        st.header('Distribusi Variabel')
+        
+        # Distribusi Target
+        fig, ax = plt.subplots(figsize=(10, 4))
+        sns.histplot(data["cnt"], kde=True, ax=ax, color='skyblue')
+        ax.set_title("Distribusi Total Penyewaan (cnt)")
+        st.pyplot(fig)
 
-    sns.barplot(x="yr", y="cnt", data=data, ax=ax, palette="coolwarm")
+        # Distribusi Fitur Numerik
+        st.subheader("Distribusi Fitur Numerik & Outliers")
+        num_cols = ["temp", "atemp", "hum", "windspeed"]
+        
+        col_plot1, col_plot2 = st.columns(2)
+        with col_plot1:
+            fig1, ax1 = plt.subplots()
+            data[num_cols].hist(bins=20, ax=ax1)
+            plt.tight_layout()
+            st.pyplot(fig1)
+        
+        with col_plot2:
+            fig2, ax2 = plt.subplots()
+            sns.boxplot(data=data[num_cols], ax=ax2, palette="Set3")
+            ax2.set_title("Boxplot Fitur Numerik")
+            st.pyplot(fig2)
 
-    ax.set_title("Rata-rata Penyewaan Sepeda: 2011 vs 2012", fontsize=14)
-    ax.set_xlabel("Tahun")
-    ax.set_ylabel("Rata-rata Jumlah Penyewaan")
+    # --- TAB 3: HUBUNGAN ANTAR VARIABEL ---
+    with tab3:
+        st.header("Analisis Hubungan & Korelasi")
+        
+        # Heatmap
+        numeric_data = data.select_dtypes(include=['int64', 'float64'])
+        fig_heat, ax_heat = plt.subplots(figsize=(10, 6))
+        sns.heatmap(numeric_data.corr(), annot=True, cmap="coolwarm", fmt=".2f", ax=ax_heat)
+        st.pyplot(fig_heat)
 
-    st.pyplot(fig)
-    
-    #ANALISIS TREN BULANAN
-    st.header("Tren Pertumbuhan Bulanan")
+        # Scatter Plot
+        st.subheader("Scatter Plot: Fitur vs Total Penyewaan")
+        cols = st.columns(2)
+        for i, col_name in enumerate(num_cols):
+            with cols[i % 2]:
+                fig, ax = plt.subplots()
+                sns.scatterplot(x=data[col_name], y=data['cnt'], ax=ax, alpha=0.4, color='orange')
+                ax.set_title(f"{col_name} vs cnt")
+                st.pyplot(fig)
 
-    fig, ax = plt.subplots(figsize=(12, 6))
+    # --- TAB 4: TREN & MUSIM ---
+    with tab4:
+        st.header("Analisis Berdasarkan Waktu & Kondisi")
 
-    sns.lineplot(
-        x="mnth", 
-        y="cnt", 
-        data=data, 
-        marker="o", 
-        linewidth=2, 
-        color="tab:blue",
-        ax=ax
-    )
-    ax.set_title("Tren Rata-rata Penyewaan Sepeda per Bulan", fontsize=16)
-    ax.set_xlabel("Bulan", fontsize=12)
-    ax.set_ylabel("Total Penyewaan (cnt)", fontsize=12)
-    ax.grid(True, linestyle='--', alpha=0.6)
+        # Musim dan Tahun
+        col_t1, col_t2 = st.columns(2)
+        with col_t1:
+            st.subheader("Penyewaan per Musim")
+            fig_s, ax_s = plt.subplots()
+            sns.barplot(x="season", y="cnt", data=data, ax=ax_s, palette="viridis")
+            st.pyplot(fig_s)
+        
+        with col_t2:
+            st.subheader("Pertumbuhan per Tahun")
+            fig_y, ax_y = plt.subplots()
+            sns.barplot(x="yr", y="cnt", data=data, ax=ax_y, palette="coolwarm")
+            st.pyplot(fig_y)
 
-    st.pyplot(fig)
+        # Tren Bulanan
+        st.subheader("Tren Rata-rata Penyewaan per Bulan")
+        fig_m, ax_m = plt.subplots(figsize=(12, 5))
+        sns.lineplot(x="mnth", y="cnt", data=data, marker="o", linewidth=2, ax=ax_m)
+        st.pyplot(fig_m)
 
-    # ANALISIS TIME SERIES (KESELURUHAN)
-    st.header("Tren Penyewaan Sepeda (Jan 2011 - Des 2012)")
+        # Time Series Harian
+        st.subheader("Pergerakan Harian (Jan 2011 - Des 2012)")
+        fig_ts, ax_ts = plt.subplots(figsize=(12, 5))
+        sns.lineplot(x="dteday", y="cnt", data=data, ax=ax_ts, color='teal')
+        plt.xticks(rotation=45)
+        st.pyplot(fig_ts)
 
-    fig, ax = plt.subplots(figsize=(12, 5))
-
-    sns.lineplot(x="dteday", y="cnt", data=data, ax=ax, color='teal')
-
-    ax.set_title("Pergerakan Harian Penyewaan Sepeda", fontsize=14)
-    ax.set_xlabel("Tanggal")
-    ax.set_ylabel("Jumlah Penyewaan")
-    plt.xticks(rotation=45) 
-    
-    st.pyplot(fig)
+else:
+    st.info("Silakan unggah file CSV Anda untuk memulai analisis.")
