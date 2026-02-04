@@ -7,12 +7,11 @@ import seaborn as sns
 # Set page title
 st.set_page_config(page_title="Dashboard Penyewaan Sepeda", layout="wide")
 
-st.title("🚲 Dashboard Analisis Data Penyewaan Sepeda")
+st.title("Dashboard Analisis Data Penyewaan Sepeda")
 
 file = st.file_uploader('Unggah File CSV', type='csv')
 
 if file is not None:
-    # --- LOAD & PREPARE DATA ---
     data = pd.read_csv(file)
     
     # Cleaning & Mapping
@@ -29,11 +28,19 @@ if file is not None:
     data['weekday'] = data['weekday'].map({
         0: 'Minggu', 1: 'Senin', 2: 'Selasa', 3: 'Rabu', 4: 'Kamis', 5: 'Jumat', 6: 'Sabtu'
     })
+    
+    
+    #MEMBUAT TAB
+    tab1, tab2, tab3, tab4 = st.tabs(["Data & Stats", "Distribusi & Outliers", "Analisis Korelasi", "Tren & Waktu"])
 
+    pertanyaan_2
+    # TAB 1: INFORMASI DATA
+    
     # --- MEMBUAT TAB ---
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["📄 Data & Stats", "📊 Distribusi & Outliers", "🔗 Analisis Korelasi", "📈 Tren & Waktu", "🚀 Advanced Analysis"])
 
     # --- TAB 1: INFORMASI DATA ---
+    main
     with tab1:
         st.header('Informasi Dataframe')
         st.dataframe(data.head(100)) # Menampilkan 100 baris pertama agar tidak berat
@@ -46,7 +53,7 @@ if file is not None:
             st.subheader('Pengecekan Missing Value')
             st.write(data.isna().sum())
 
-    # --- TAB 2: EXPLORATORY DATA ANALYSIS (EDA) ---
+    # TAB 2: EXPLORATORY DATA ANALYSIS (EDA)
     with tab2:
         st.header('Distribusi Variabel')
         
@@ -73,7 +80,7 @@ if file is not None:
             ax2.set_title("Boxplot Fitur Numerik")
             st.pyplot(fig2)
 
-    # --- TAB 3: HUBUNGAN ANTAR VARIABEL ---
+    # TAB 3: HUBUNGAN ANTAR VARIABEL
     with tab3:
         st.header("Analisis Hubungan & Korelasi")
         
@@ -93,7 +100,7 @@ if file is not None:
                 ax.set_title(f"{col_name} vs cnt")
                 st.pyplot(fig)
 
-    # --- TAB 4: TREN & MUSIM ---
+    #TAB 4: TREN & MUSIM
     with tab4:
         st.header("Analisis Berdasarkan Waktu & Kondisi")
 
