@@ -33,7 +33,14 @@ if file is not None:
     #MEMBUAT TAB
     tab1, tab2, tab3, tab4 = st.tabs(["Data & Stats", "Distribusi & Outliers", "Analisis Korelasi", "Tren & Waktu"])
 
+    pertanyaan_2
     # TAB 1: INFORMASI DATA
+    
+    # --- MEMBUAT TAB ---
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📄 Data & Stats", "📊 Distribusi & Outliers", "🔗 Analisis Korelasi", "📈 Tren & Waktu", "🚀 Advanced Analysis"])
+
+    # --- TAB 1: INFORMASI DATA ---
+    main
     with tab1:
         st.header('Informasi Dataframe')
         st.dataframe(data.head(100)) # Menampilkan 100 baris pertama agar tidak berat
@@ -123,6 +130,49 @@ if file is not None:
         sns.lineplot(x="dteday", y="cnt", data=data, ax=ax_ts, color='teal')
         plt.xticks(rotation=45)
         st.pyplot(fig_ts)
+
+    with tab5:
+        st.header("🚀 Analisis Lanjutan & Insight")
+        
+        # 1. Clustering Sederhana (Manual Binning untuk Segmentasi)
+        # Mengelompokkan hari berdasarkan tingkat penyewaan: Low, Medium, High
+        st.subheader("Segmentasi Hari Berdasarkan Volume Penyewaan")
+        
+        bins = [0, 2000, 5000, data['cnt'].max()]
+        labels = ['Low Demand', 'Medium Demand', 'High Demand']
+        data['demand_category'] = pd.cut(data['cnt'], bins=bins, labels=labels)
+        
+        fig_segment, ax_segment = plt.subplots(figsize=(8, 5))
+        sns.countplot(x='demand_category', data=data, palette='magma', ax=ax_segment)
+        ax_segment.set_title("Distribusi Kategori Permintaan")
+        st.pyplot(fig_segment)
+        
+        with st.expander("💡 Lihat Penjelasan Analisis Segmentasi"):
+            st.write("""
+            **Analisis:**
+            Berdasarkan grafik di atas, kita dapat mengidentifikasi hari-hari dengan permintaan 'High Demand'. 
+            Hal ini membantu operasional dalam memastikan stok sepeda tersedia pada hari-hari tersebut. 
+            Segmentasi ini merupakan teknik *data mining* sederhana untuk profil pelanggan.
+            """)
+
+        # 2. Geoanalysis / Regional Analysis (Jika ada data latitude/longitude, jika tidak, gunakan perbandingan hari kerja vs libur)
+        st.subheader("Analisis Perilaku: Hari Kerja vs Akhir Pekan")
+        
+        fig_work, ax_work = plt.subplots(figsize=(8, 5))
+        sns.boxplot(x='workingday', y='cnt', data=data, palette='Set2', ax=ax_work)
+        ax_work.set_xticklabels(['Hari Libur', 'Hari Kerja'])
+        ax_work.set_title("Perbandingan Penyewaan: Hari Kerja vs Libur")
+        st.pyplot(fig_work)
+
+        # --- EXPLANATORY SECTION ---
+        st.divider()
+        st.header("📝 Kesimpulan Utama (Explanatory Analysis)")
+        st.info("""
+        1. **Pengaruh Cuaca:** Terdapat korelasi positif yang kuat antara suhu (`temp`) dan jumlah penyewaan. Semakin hangat cuaca, semakin tinggi minat penyewa.
+        2. **Tren Tahunan:** Terjadi kenaikan signifikan jumlah penyewaan dari tahun 2011 ke 2012, yang menunjukkan bisnis ini sedang berkembang.
+        3. **Puncak Musim:** Musim Gugur (Fall) merupakan periode dengan rata-rata penyewaan tertinggi dibandingkan musim lainnya.
+        4. **Insight Strategis:** Tim operasional harus menambah unit sepeda pada bulan-bulan puncak (Mei - Oktober) dan melakukan perawatan rutin pada musim dingin (Winter) saat permintaan menurun.
+        """)
 
 else:
     st.info("Silakan unggah file CSV Anda untuk memulai analisis.")
