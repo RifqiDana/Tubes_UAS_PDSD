@@ -184,8 +184,51 @@ if file is not None:
     
     with tab4:
         st.subheader("Pertanyaan 4: Pola Hari Kerja (Dimas Munawar)")
-        #ikutin kaya pertanyaan 2 cara pengetikannya
-        pass
+        st.info("**Pertanyaan:** Berapa jumlah sepeda optimal yang harus tersedia tiap musim/hari berdasarkan pola permintaan historis?")
+
+        # Visualisasi Pola Permintaan Berdasarkan Musim
+        fig1 = px.box(
+            filter_df, 
+            x='season', 
+            y='cnt', #gruping data
+            color='season', 
+            category_orders={'season': ['Spring', 'Summer', 'Fall', 'Winter']},
+            title='<b>Distribusi Jumlah Total Penyewaan Sepeda (cnt) per Musim</b>',
+            labels={'season': 'Musim', 'cnt': 'Jumlah Total Penyewaan'},
+            points="outliers",
+            template='plotly_white' 
+        )
+
+        fig1.update_layout(
+            showlegend=False,
+            xaxis_title="Musim",
+            yaxis_title="Jumlah Total Penyewaan",
+            yaxis=dict(
+                showgrid=True, 
+                gridcolor='LightGray', 
+                gridwidth=1, 
+                griddash='dash'
+            )
+        )
+        st.plotly_chart(fig1, use_container_width=True)
+
+        # Penjelasan analisis
+        st.write("""
+        **Analisis Visual:**
+        
+        1.) Musim Puncak (Optimal Tertinggi): Permintaan tertinggi terjadi pada Fall (Musim Gugur), Summer (Musim Panas), diikuti oleh Winter (Musim Dingin). 
+            Ini adalah periode kritis di mana stok sepeda harus dimaksimalkan untuk menghindari stock-out.
+            Rata-rata harian penyewaan pada musim Fall (sekitar 5644 sepeda/hari), musim Summer (sekitar 4992 sepeda/hari), dan musim Winter(sekitar 4721 sepeda/hari).
+
+        2.) Musim Rendah (Optimal Terendah): Permintaan terendah terjadi pada musim Spring (Musim Semi) dengan variabilitas yang lebih kecil.
+            Stok sepeda dapat dikurangi pada periode ini, tetapi harus tetap di atas kuartil pertama untuk mengakomodasi lonjakan mendadak.
+            Rata-rata harian penyewaan pada musim Spring (sekitar 2604 sepeda/hari).
+        """)
+
+        st.success("""
+        **Kesimpulan Strategi:**
+        Untuk menjamin ketersediaan stok, penyedia layanan harus menempatkan unit sepeda paling banyak pada Musim Puncak, Lalu mengurangi stok pada Musim Rendah agar dapat mengurangi efisiensi biaya perawatan.
+        """)
     
     with tab5:
         st.subheader("Pertanyaan 5: Segmentasi Pengguna (Sonjaya Baruna)")
