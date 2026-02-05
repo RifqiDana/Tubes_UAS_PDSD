@@ -141,9 +141,9 @@ if file is not None:
     
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "Q1: Keamanan Cuaca", 
-        "Q2: Stok Optimal", 
-        "Q3: Tren Pertumbuhan", 
-        "Q4: Pola Hari Kerja", 
+        "Q2: Pola Hari Kerja Berdasarkan Musim", 
+        "Q3: Promosi Strategis Penyewaan Sepeda", 
+        "Q4: Optimal stok pada setiap musim", 
         "Q5: Member vs Casual"
     ])
     
@@ -152,7 +152,7 @@ if file is not None:
         #ikutin kaya pertanyaan 2 cara pengetikannya
     
     with tab2:
-        st.subheader("Pertanyaan 2: Stok Sepeda Optimal (Muhamad Naufal Ikbar)")
+        st.subheader("Pertanyaan 2: Pola Hari Kerja Berdasarkan Musim (Muhamad Naufal Ikbar)")
         st.info("**Pertanyaan:** Bagaimana kombinasi faktor musim dan hari kerja mempengaruhi jumlah sepeda yang harus disediakan?")
         
         #gruping data
@@ -168,7 +168,7 @@ if file is not None:
         #penjelasan
         st.write("""
         **Analisis Visual:**
-        - Jika batang biru (Workday) lebih tinggi, berarti stok harus difokuskan untuk komuter.
+        - Jika batang pink (Workday) lebih tinggi, berarti stok harus difokuskan untuk komuter.
         - Jika batang merah (Holiday) naik, berarti stok harus dialihkan ke area wisata.
         """)
         
@@ -178,12 +178,60 @@ if file is not None:
         """)
         
     with tab3:
-        st.subheader("Pertanyaan 3: Tren Pertumbuhan (Rifqi Andana)")
-        #ikutin kaya pertanyaan 2 cara pengetikannya
-        pass
-    
+        st.subheader("Pertanyaan 3: Promosi Strategis Penyewaan Sepeda (Rifqi Andana)")
+        st.info("**Pertanyaan:** Berdasarkan hasil analisis di atas, rekomendasi strategis apa yang dapat diberikan kepada operator layanan penyewaan sepeda (misalnya, mengenai strategi promosi untuk hari/musim tertentu atau pengguna tertentu) untuk meningkatkan jumlah total sewa?")
+
+        # Rata-rata untuk melihat tren perilaku umum
+        user_type_analysis = filter_df.groupby(['season', 'workingday'])[['casual', 'registered']].mean().reset_index()
+
+        #Melt data agar cocok untuk grafik bar yang membandingkan tipe user
+        user_type_melted = user_type_analysis.melt (
+            id_vars = ['season', 'workingday'],
+            value_vars = ['casual', 'registered'], 
+            var_name = 'user_type',
+            value_name = 'avg_rentals'
+        )
+        # Visualisasi : Perbandingan perilaku casual vs registered
+        fig_promo = px.bar(
+            user_type_melted,
+            x= "season",
+            y= "avg_rentals", 
+            color = "user_type",
+            barmode = "group",
+            facet_col = "workingday",
+            labels = {
+                "avg_rentals" : "Rata-rata Sewa", 
+                "season" : "Musim", 
+                "user_type" : "Tipe Pengguna"
+                },
+            title = "Pola Sewa : casual vs registered (Berdasarkan & Hari)",
+            color_discrete_map = {'casual' : '#FFA15A', 'registered' : '#19D3AF'},
+            category_orders = {"season" : ["Spring", "Summer", "Fall", "Winter"]}
+        ) 
+
+        fig_promo.update_layout(margin=dict(t=50, b=20, l=20, r=20))
+        st.plotly_chart(fig_promo, use_container_width=True)
+
+        #Penjelasan 
+        st.markdown("""
+        ### Rekomendasi Strategis:
+
+         **1.) Strategi Promosi 'casual' (Target: Turis/Rekreasi):**
+             Karena pengguna casual melonjak drastis di Weekend/Holiday (terutama Musim Panas & Gugur), berikan promo 'Weekend Pass' atau diskon bundling keluarga di lokasi wisata.
+                    
+         **2.)Strategi Loyalitas 'registered' (Target: Komuter):**
+             Pengguna registered sangat stabil di Working Day. Fokuskan pada program subscription bulanan dengan harga khusus untuk rute perkantoran.
+                    
+         **3.) Antisipasi 'Low Season' (Musim Dingin):**
+             Saat penyewaan turun di Musim Dingin, lakukan maintenance besar-besaran atau berikan promo 'Winter Challenge' dengan poin reward ganda untuk menjaga keterikatan pengguna.
+        """)
+
+        st.success("""
+        **Kesimpulan Utama:** Tingkatkan anggaran pemasaran digital pada akhir pekan di Musim Gugur untuk menjaring pengguna kasual, dan perkuat kemitraan korporat untuk menjaga volume pengguna terdaftar di hari kerja.
+        """)
+        
     with tab4:
-        st.subheader("Pertanyaan 4: Pola Hari Kerja (Dimas Munawar)")
+        st.subheader("Pertanyaan 4: Optimal stok pada setiap musim (Dimas Munawar)")
         st.info("**Pertanyaan:** Berapa jumlah sepeda optimal yang harus tersedia tiap musim/hari berdasarkan pola permintaan historis?")
 
         # Visualisasi Pola Permintaan Berdasarkan Musim
@@ -227,7 +275,7 @@ if file is not None:
 
         st.success("""
         **Kesimpulan Strategi:**
-        Untuk menjamin ketersediaan stok, penyedia layanan harus menempatkan unit sepeda paling banyak pada Musim Puncak, Lalu mengurangi stok pada Musim Rendah agar dapat mengurangi efisiensi biaya perawatan.
+        Untuk menjamin ketersediaan stok, penyedia layanan harus menempatkan unit sepeda paling banyak pada Musim Puncak. Agar dapat mengurangi efisiensi biaya perawatan, stok pada musim Rendah dikurangi.
         """)
     
     with tab5:
