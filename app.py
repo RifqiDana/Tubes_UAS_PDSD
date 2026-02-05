@@ -1,128 +1,197 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
+import streamlit as st 
+import pandas as pd 
+import plotly.express as px
+import os
+import warnings
+warnings.filterwarnings('ignore')
 
-# Set page title
-st.set_page_config(page_title="Dashboard Penyewaan Sepeda", layout="wide")
+st.set_page_config(page_title="Penyewaan Sepeda", page_icon=":bar_chart:", layout="wide")
 
-st.title("Dashboard Analisis Data Penyewaan Sepeda")
+st.title(" :bar_chart: Penyewaan Sepeda")
+st.markdown('<style>div.block-container{padding-top:2rem;}</style>',unsafe_allow_html=True)
 
+#membaca dataset
 file = st.file_uploader('Unggah File CSV', type='csv')
-
 if file is not None:
-    data = pd.read_csv(file)
+    df = pd.read_csv(file, encoding="ISO-8859-1")
     
     # Cleaning & Mapping
-    data['dteday'] = pd.to_datetime(data['dteday'])
-    data['season'] = data['season'].map({1: 'Spring', 2: 'Summer', 3: 'Fall', 4: 'Winter'})
-    data['yr'] = data['yr'].map({0: '2011', 1: '2012'})
-    data['mnth'] = data['mnth'].map({
+    df['dteday'] = pd.to_datetime(df['dteday'])
+    df['season'] = df['season'].map({1: 'Spring', 2: 'Summer', 3: 'Fall', 4: 'Winter'})
+    df['yr'] = df['yr'].map({0: '2011', 1: '2012'})
+    df['mnth'] = df['mnth'].map({
         1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'Mei', 6: 'Jun', 
         7: 'Jul', 8: 'Agu', 9: 'Sep', 10: 'Okt', 11: 'Nov', 12: 'Des' 
     })
-    data['weathersit'] = data['weathersit'].map({
-        1: 'Cerah/Berawan', 2: 'Kabut/Mendung', 3: 'Salju/Hujan Ringan', 4: 'Cuaca Ekstrem'
+    df['weathersit'] = df['weathersit'].map({
+        1: 'Clear/Few clouds', 2: 'Mist/Cloudy', 3: 'Light Snow/Rain', 4: 'Heavy Rain/Snow'
     })
-    data['weekday'] = data['weekday'].map({
-        0: 'Minggu', 1: 'Senin', 2: 'Selasa', 3: 'Rabu', 4: 'Kamis', 5: 'Jumat', 6: 'Sabtu'
+    df['weekday'] = df['weekday'].map({
+        0: 'Sunday', 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday'
+    })
+    df['workingday'] = df['workingday'].map({
+        0: 'Working Day', 1: 'Holiday/Weekend'
     })
     
-    
-    #MEMBUAT TAB
-    tab1, tab2, tab3, tab4 = st.tabs(["Data & Stats", "Distribusi & Outliers", "Analisis Korelasi", "Tren & Waktu"])
+    col1, col2 = st.columns((2))
+    df['dteday'] = pd.to_datetime(df['dteday'])
 
-    # TAB 1: INFORMASI DATA
+    #mendapatkan tanggal minimum dan maksimum
+    startDate = pd.to_datetime(df['dteday']).min()
+    endDate = pd.to_datetime(df['dteday']).max()
+
+    with col1:
+        date1 = pd.to_datetime(st.date_input("Start Date", startDate))
+    with col2:
+        date2 = pd.to_datetime(st.date_input("End Date", endDate))
+        
+    df = df[(df['dteday'] >= date1) & (df['dteday'] <= date2)].copy()
+    
+    #membuat filter sidebar 
+    st.sidebar.header("Pilih filter Anda: ")
+    
+    #untuk bulan
+    bulan = st.sidebar.multiselect("Pilih Bulan", df['mnth'].unique())
+    if not bulan:
+        df2 = df.copy()
+    else:
+        df2 = df[df['mnth'].isin(bulan)]
+        
+    #untuk kodisi musim
+    musim = st.sidebar.multiselect("Pilih Musim", df2['season'].unique())
+    if not musim:
+        df3 = df2.copy()
+    else:
+        df3 = df2[df2['season'].isin(musim)]
+        
+    #untuk kodisi cuaca
+    cuaca = st.sidebar.multiselect("Pilih Kondisi Cuaca", df3['weathersit'].unique())
+    if not cuaca:
+        df4 = df3.copy()
+    else:
+        df4 = df3[df3['weathersit'].isin(cuaca)]
+       
+    #untuk hari
+    hari = st.sidebar.multiselect("Pilih Hari", df4['weekday'].unique())
+    if not hari:
+        filter_df = df4.copy()
+    else:
+        filter_df = df4[df4['weekday'].isin(hari)]
+        
+    #gruping data
+    #berdasarkan musim
+    keadan_musim = filter_df.groupby(by='season', as_index=False)["cnt"].sum()
+    #berdasarkan bulan
+    keadan_bulan = filter_df.groupby(by='mnth', as_index=False)["cnt"].sum()
+    #berdasarkan cuaca
+    data_cuaca = filter_df.groupby(by='weathersit', as_index=False)["cnt"].sum()
+    
+    st.subheader("penyewaan Berdasarkan Musim")
+    col3, col4 = st.columns((2))
+    with col3:
+        fig = px.bar (keadan_musim, x='season', y="cnt",
+                      text_auto='.2s',
+                      title="Total Penyewaan per Musim",
+                      template="plotly_white")
+        st.plotly_chart(fig, use_container_width=True)
+     
+    with col4:
+         fig = px.pie(keadan_musim, values="cnt", names="season",
+                      hole=0.5,
+                      title="Kontribusi Penyawaan Per Musim")
+         fig.update_traces(textinfo='percent+label')
+         st.plotly_chart(fig, use_container_width=True)
+         
+    st.subheader("Tren Penyewaan Harian")
+    line_data = filter_df.groupby(by='dteday', as_index=False)["cnt"].sum()
+    
+    fig2 = px.line(line_data, x='dteday', y="cnt",
+                   title="Jumlah Penyewaan Sepeda",
+                   markers=True,
+                   template="gridon")
+    fig2.update_xaxes(rangeslider_visible=True)
+    st.plotly_chart(fig2, use_container_width=True)
+    
+    st.subheader("Penyewaan Berdasarkan Kondisi Cuaca")
+    fig3 = px.bar(data_cuaca, x='weathersit', y='cnt',
+                  color='weathersit',title="Rata-rata Sewa per Kondisi Cuaca")
+    st.plotly_chart(fig3, use_container_width=True)
+    
+    st.subheader("Hierarki Penyewaan: Musim & Hari Kerja")
+    fig4 = px.sunburst(filter_df, path=['season', 'workingday'], values="cnt",
+                       color='season', title="Distribusi Sewa: Musim > Status Hari",
+                       height=700)
+    st.plotly_chart(fig4, use_container_width=True)
+    
+    st.markdown("---")
+    st.subheader("Data Sudah Terfilter")
+    with st.expander("Klik Untuk melihat detail data"):
+        st.dataframe(filter_df)
+        csv = filter_df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="Unduh Data Sebagai CSV",
+            data=csv,
+            file_name='data_sepeda_filter.csv',
+            mime='text/csv'
+        )
+        
+    # ANALISIS PERTANYAAN BISNIS 
+    st.markdown("---")
+    st.header("Analisis & Jawaban Pertanyaan Bisnis")
+    
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "Q1: Keamanan Cuaca", 
+        "Q2: Stok Optimal", 
+        "Q3: Tren Pertumbuhan", 
+        "Q4: Pola Hari Kerja", 
+        "Q5: Member vs Casual"
+    ])
+    
     with tab1:
-        st.header('Informasi Dataframe')
-        st.dataframe(data.head(100)) # Menampilkan 100 baris pertama agar tidak berat
-        
-        col_info1, col_info2 = st.columns(2)
-        with col_info1:
-            st.subheader('Statistik Deskriptif')
-            st.write(data.describe())
-        with col_info2:
-            st.subheader('Pengecekan Missing Value')
-            st.write(data.isna().sum())
-
-    # TAB 2: EXPLORATORY DATA ANALYSIS (EDA)
+        st.subheader("Pertanyaan 1: Keamanan & Cuaca (M Arvian Nazmy)")
+        #ikutin kaya pertanyaan 2 cara pengetikannya
+    
     with tab2:
-        st.header('Distribusi Variabel')
+        st.subheader("Pertanyaan 2: Stok Sepeda Optimal (Muhamad Naufal Ikbar)")
+        st.info("**Pertanyaan:** Bagaimana kombinasi faktor musim dan hari kerja mempengaruhi jumlah sepeda yang harus disediakan?")
         
-        # Distribusi Target
-        fig, ax = plt.subplots(figsize=(10, 4))
-        sns.histplot(data["cnt"], kde=True, ax=ax, color='skyblue')
-        ax.set_title("Distribusi Total Penyewaan (cnt)")
-        st.pyplot(fig)
-
-        # Distribusi Fitur Numerik
-        st.subheader("Distribusi Fitur Numerik & Outliers")
-        num_cols = ["temp", "atemp", "hum", "windspeed"]
+        #gruping data
+        stok_analisis = filter_df.groupby(['season','workingday'])["cnt"].mean().reset_index()
         
-        col_plot1, col_plot2 = st.columns(2)
-        with col_plot1:
-            fig1, ax1 = plt.subplots()
-            data[num_cols].hist(bins=20, ax=ax1)
-            plt.tight_layout()
-            st.pyplot(fig1)
+        #membuat grafik
+        fig_q2 = px.bar(stok_analisis, x="season", y="cnt",
+                        color="workingday",barmode="group",
+                        labels={"cnt": "Rata-rata Sewa", "season": "Musim", "workingday": "Tipe Hari"},
+                        title="Rata-rata Penyewaan: Musim vs Tipe Hari",
+                        color_discrete_map={'Workday': '#636EFA', 'Holiday/Weekend': '#EF553B'})
+        st.plotly_chart(fig_q2, use_container_width=True)
+        #penjelasan
+        st.write("""
+        **Analisis Visual:**
+        - Jika batang biru (Workday) lebih tinggi, berarti stok harus difokuskan untuk komuter.
+        - Jika batang merah (Holiday) naik, berarti stok harus dialihkan ke area wisata.
+        """)
         
-        with col_plot2:
-            fig2, ax2 = plt.subplots()
-            sns.boxplot(data=data[num_cols], ax=ax2, palette="Set3")
-            ax2.set_title("Boxplot Fitur Numerik")
-            st.pyplot(fig2)
-
-    # TAB 3: HUBUNGAN ANTAR VARIABEL
+        st.success("""
+        **Kesimpulan Strategi:**
+        Strategi paling optimal adalah menjaga **persediaan tertinggi pada hari kerja di Musim Gugur/Panas** dan berada di level terendah pada akhir pekan di Musim Semi.
+        """)
+        
     with tab3:
-        st.header("Analisis Hubungan & Korelasi")
-        
-        # Heatmap
-        numeric_data = data.select_dtypes(include=['int64', 'float64'])
-        fig_heat, ax_heat = plt.subplots(figsize=(10, 6))
-        sns.heatmap(numeric_data.corr(), annot=True, cmap="coolwarm", fmt=".2f", ax=ax_heat)
-        st.pyplot(fig_heat)
-
-        # Scatter Plot
-        st.subheader("Scatter Plot: Fitur vs Total Penyewaan")
-        cols = st.columns(2)
-        for i, col_name in enumerate(num_cols):
-            with cols[i % 2]:
-                fig, ax = plt.subplots()
-                sns.scatterplot(x=data[col_name], y=data['cnt'], ax=ax, alpha=0.4, color='orange')
-                ax.set_title(f"{col_name} vs cnt")
-                st.pyplot(fig)
-
-    #TAB 4: TREN & MUSIM
+        st.subheader("Pertanyaan 3: Tren Pertumbuhan (Rifqi Andana)")
+        #ikutin kaya pertanyaan 2 cara pengetikannya
+        pass
+    
     with tab4:
-        st.header("Analisis Berdasarkan Waktu & Kondisi")
-
-        # Musim dan Tahun
-        col_t1, col_t2 = st.columns(2)
-        with col_t1:
-            st.subheader("Penyewaan per Musim")
-            fig_s, ax_s = plt.subplots()
-            sns.barplot(x="season", y="cnt", data=data, ax=ax_s, palette="viridis")
-            st.pyplot(fig_s)
-        
-        with col_t2:
-            st.subheader("Pertumbuhan per Tahun")
-            fig_y, ax_y = plt.subplots()
-            sns.barplot(x="yr", y="cnt", data=data, ax=ax_y, palette="coolwarm")
-            st.pyplot(fig_y)
-
-        # Tren Bulanan
-        st.subheader("Tren Rata-rata Penyewaan per Bulan")
-        fig_m, ax_m = plt.subplots(figsize=(12, 5))
-        sns.lineplot(x="mnth", y="cnt", data=data, marker="o", linewidth=2, ax=ax_m)
-        st.pyplot(fig_m)
-
-        # Time Series Harian
-        st.subheader("Pergerakan Harian (Jan 2011 - Des 2012)")
-        fig_ts, ax_ts = plt.subplots(figsize=(12, 5))
-        sns.lineplot(x="dteday", y="cnt", data=data, ax=ax_ts, color='teal')
-        plt.xticks(rotation=45)
-        st.pyplot(fig_ts)
-
+        st.subheader("Pertanyaan 4: Pola Hari Kerja (Dimas Munawar)")
+        #ikutin kaya pertanyaan 2 cara pengetikannya
+        pass
+    
+    with tab5:
+        st.subheader("Pertanyaan 5: Segmentasi Pengguna (Sonjaya Baruna)")
+        #tambah tuh yang pertanyaan 5
+        pass
+    
 else:
     st.info("Silakan unggah file CSV Anda untuk memulai analisis.")
+    
