@@ -144,7 +144,7 @@ if file is not None:
         "Q2: Pola Hari Kerja Berdasarkan Musim", 
         "Q3: Promosi Strategis Penyewaan Sepeda", 
         "Q4: Optimal stok pada setiap musim", 
-        "Q5: Member vs Casual"
+        "Q5: ganti sesuai pertanyaan"
     ])
     
     with tab1:
@@ -160,34 +160,34 @@ if file is not None:
         .mean()
         .reset_index()
         .sort_values("cnt", ascending=False)
-    )
+        )
 
-    fig_q1 = px.bar(
-        kondisi_avg,
-        x="weathersit",
-        y="cnt",
-        color="weathersit",
-        text_auto=".0f",
-        title="Rata-rata Penyewaan Sepeda per Kondisi Cuaca",
-        labels={
-            "cnt": "Rata-rata Penyewaan",
-            "weathersit": "Kondisi Cuaca"
-        }
-    )
+        fig_q1 = px.bar(
+            kondisi_avg,
+            x="weathersit",
+            y="cnt",
+            color="weathersit",
+            text_auto=".0f",
+            title="Rata-rata Penyewaan Sepeda per Kondisi Cuaca",
+            labels={
+                "cnt": "Rata-rata Penyewaan",
+                "weathersit": "Kondisi Cuaca"
+            }
+        )
 
-    st.plotly_chart(fig_q1, use_container_width=True)
-    
-    #penjelasan
-    st.write("""
-    **Penjelasan :**
-    Pengguna paling aktif menyewa sepeda saat cuaca cerah dan musim hangat (sekitar pertengahan tahun) serta pada hari kerja, karena kondisi tersebut mendukung aktivitas luar ruangan dan mobilitas. Sebaliknya, permintaan paling rendah terjadi saat cuaca buruk seperti hujan/kabut dan pada awal tahun atau musim dingin, ketika orang cenderung mengurangi penggunaan sepeda.
-    """)
-    
-    st.success(""" 
-    **Kesimpulan :**
-    Permintaan penyewaan sepeda sangat dipengaruhi oleh kondisi cuaca dan musim. Penggunaan paling tinggi terjadi saat cuaca cerah dan suhu nyaman di pertengahan tahun, sedangkan permintaan menurun saat cuaca buruk dan pada periode musim awal tahun. Artinya, semakin mendukung kondisi lingkungan untuk aktivitas luar, semakin tinggi tingkat penyewaan sepeda.
+        st.plotly_chart(fig_q1, use_container_width=True)
+        
+        #penjelasan
+        st.write("""
+        **Penjelasan :**
+        Pengguna paling aktif menyewa sepeda saat cuaca cerah dan musim hangat (sekitar pertengahan tahun) serta pada hari kerja, karena kondisi tersebut mendukung aktivitas luar ruangan dan mobilitas. Sebaliknya, permintaan paling rendah terjadi saat cuaca buruk seperti hujan/kabut dan pada awal tahun atau musim dingin, ketika orang cenderung mengurangi penggunaan sepeda.
+        """)
+        
+        st.success(""" 
+        **Kesimpulan :**
+        Permintaan penyewaan sepeda sangat dipengaruhi oleh kondisi cuaca dan musim. Penggunaan paling tinggi terjadi saat cuaca cerah dan suhu nyaman di pertengahan tahun, sedangkan permintaan menurun saat cuaca buruk dan pada periode musim awal tahun. Artinya, semakin mendukung kondisi lingkungan untuk aktivitas luar, semakin tinggi tingkat penyewaan sepeda.
 
-    """)
+        """)
     
     with tab2:
         st.subheader("Pertanyaan 2: Pola Hari Kerja Berdasarkan Musim (Muhamad Naufal Ikbar)")
@@ -317,7 +317,7 @@ if file is not None:
         """)
     
     with tab5:
-        st.subheader("Pertanyaan 5: Segmentasi Pengguna (Sonjaya Baruna)")
+        st.subheader("Pertanyaan 5: samain kaya Q5 (Sonjaya Baruna)")
         #tambah tuh yang pertanyaan 5
         pass
     
