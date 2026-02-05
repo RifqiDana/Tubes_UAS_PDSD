@@ -140,7 +140,7 @@ if file is not None:
     st.header("Analisis & Jawaban Pertanyaan Bisnis")
     
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "Q1: Keamanan Cuaca", 
+        "Q1: Aktivitas Penyewaan", 
         "Q2: Pola Hari Kerja Berdasarkan Musim", 
         "Q3: Promosi Strategis Penyewaan Sepeda", 
         "Q4: Optimal stok pada setiap musim", 
@@ -148,8 +148,46 @@ if file is not None:
     ])
     
     with tab1:
-        st.subheader("Pertanyaan 1: Keamanan & Cuaca (M Arvian Nazmy)")
-        #ikutin kaya pertanyaan 2 cara pengetikannya
+        st.subheader("Pertanyaan 1: Aktivitas Penyewaan Berdasarkan Kondisi Cuaca (M Arvian Nazmy)")
+        st.info("**Pertanyaan:**  Pada kondisi apa pengguna paling aktif menyewa sepeda, dan kapan permintaan paling rendah terjadi? ")
+        
+        #gruping data
+        stok_analisis = filter_df.groupby(['season','workingday'])["cnt"].mean().reset_index()
+        
+         # membuat grafik
+        kondisi_avg = (
+        filter_df.groupby("weathersit")["cnt"]
+        .mean()
+        .reset_index()
+        .sort_values("cnt", ascending=False)
+    )
+
+    fig_q1 = px.bar(
+        kondisi_avg,
+        x="weathersit",
+        y="cnt",
+        color="weathersit",
+        text_auto=".0f",
+        title="Rata-rata Penyewaan Sepeda per Kondisi Cuaca",
+        labels={
+            "cnt": "Rata-rata Penyewaan",
+            "weathersit": "Kondisi Cuaca"
+        }
+    )
+
+    st.plotly_chart(fig_q1, use_container_width=True)
+    
+    #penjelasan
+    st.write("""
+    **Penjelasan :**
+    Pengguna paling aktif menyewa sepeda saat cuaca cerah dan musim hangat (sekitar pertengahan tahun) serta pada hari kerja, karena kondisi tersebut mendukung aktivitas luar ruangan dan mobilitas. Sebaliknya, permintaan paling rendah terjadi saat cuaca buruk seperti hujan/kabut dan pada awal tahun atau musim dingin, ketika orang cenderung mengurangi penggunaan sepeda.
+    """)
+    
+    st.success(""" 
+    **Kesimpulan :**
+    Permintaan penyewaan sepeda sangat dipengaruhi oleh kondisi cuaca dan musim. Penggunaan paling tinggi terjadi saat cuaca cerah dan suhu nyaman di pertengahan tahun, sedangkan permintaan menurun saat cuaca buruk dan pada periode musim awal tahun. Artinya, semakin mendukung kondisi lingkungan untuk aktivitas luar, semakin tinggi tingkat penyewaan sepeda.
+
+    """)
     
     with tab2:
         st.subheader("Pertanyaan 2: Pola Hari Kerja Berdasarkan Musim (Muhamad Naufal Ikbar)")
