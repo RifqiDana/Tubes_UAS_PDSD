@@ -317,9 +317,50 @@ if file is not None:
         """)
     
     with tab5:
-        st.subheader("Pertanyaan 5: samain kaya Q5 (Sonjaya Baruna)")
-        #tambah tuh yang pertanyaan 5
-        pass
+        st.subheader("Pertanyaan 5: Analisis Pertumbuhan Tahunan (Sonjaya Baruna)")
+        st.info("**Pertanyaan:** Bagaimana perbandingan performa total penyewaan antara tahun 2011 dan 2012, serta bulan apa yang mencatatkan pertumbuhan tertinggi?")
+        
+        # Penyiapan data
+        month_order = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+        growth_data = filter_df.groupby(['yr', 'mnth'])['cnt'].sum().reset_index()
+        growth_data['mnth'] = pd.Categorical(growth_data['mnth'], categories=month_order, ordered=True)
+        growth_data = growth_data.sort_values(['yr', 'mnth'])
+
+        # Visualisasi Tren Pertumbuhan
+        fig_q5 = px.line(
+            growth_data, 
+            x="mnth", 
+            y="cnt", 
+            color="yr",
+            markers=True,
+            title="Perbandingan Penyewaan Bulanan: 2011 vs 2012",
+            labels={"cnt": "Total Sewa", "mnth": "Bulan", "yr": "Tahun"},
+            template="plotly_white"
+        )
+        
+        st.plotly_chart(fig_q5, use_container_width=True)
+        
+        # Menghitung total pertumbuhan sederhana
+        total_2011 = growth_data[growth_data['yr'] == '2011']['cnt'].sum()
+        total_2012 = growth_data[growth_data['yr'] == '2012']['cnt'].sum()
+        
+        if total_2011 > 0:
+            growth_pct = ((total_2012 - total_2011) / total_2011) * 100
+        else:
+            growth_pct = 0
+
+        # Penjelasan
+        st.write(f"""
+        **Analisis Visual:**
+        - Terdapat kenaikan volume penyewaan yang signifikan dari tahun **2011** ke **2012** secara keseluruhan.
+        - Puncak penyewaan di kedua tahun secara konsisten berada pada bulan-bulan tengah tahun (September/Oktober di 2012).
+        - Pertumbuhan total dari tahun 2011 ke 2012 adalah sebesar **{growth_pct:.1f}%**.
+        """)
+        
+        st.success("""
+        **Kesimpulan Strategi:**
+        Bisnis menunjukkan tren positif yang kuat. Operator harus bersiap dengan armada yang lebih banyak di tahun berikutnya pada periode September-Oktober karena di sinilah titik jenuh permintaan tertinggi terjadi.
+        """)
     
 else:
     st.info("Silakan unggah file CSV Anda untuk memulai analisis.")
