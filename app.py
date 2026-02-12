@@ -144,7 +144,7 @@ if file is not None:
         "Q2: Pola Hari Kerja Berdasarkan Musim", 
         "Q3: Promosi Strategis Penyewaan Sepeda", 
         "Q4: Optimal stok pada setiap musim", 
-        "Q5: ganti sesuai pertanyaan"
+        "Q5: Tren Waktu"
     ])
     
     with tab1:
@@ -317,7 +317,7 @@ if file is not None:
         """)
     
     with tab5:
-        st.subheader("Pertanyaan 5: Analisis Pertumbuhan Tahunan (Sonjaya Baruna)")
+        st.subheader("Pertanyaan 5: Analisis Pertumbuhan Tahunan (Sonjaya Baruna Sugandi)")
         st.info("**Pertanyaan:** Bagaimana perbandingan performa total penyewaan antara tahun 2011 dan 2012, serta bulan apa yang mencatatkan pertumbuhan tertinggi?")
         
         # Penyiapan data
